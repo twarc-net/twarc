@@ -1,0 +1,58 @@
+name: waifu-dev
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: waifu-meili
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:7700:7700"
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  imgproxy:
+    image: ghcr.io/imgproxy/imgproxy:v3.27
+    container_name: waifu-imgproxy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Signing (uploads pass signed URLs to imgproxy)
+      IMGPROXY_KEY: ${IMGPROXY_KEY}
+      IMGPROXY_SALT: ${IMGPROXY_SALT}
+
+      # Local file mode for dev — points at the api's storage/app dir
+      # In prod, swap to IMGPROXY_USE_S3 + B2 endpoint.
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /data
+      IMGPROXY_USE_ETAG: "true"
+
+      # Output formats
+      IMGPROXY_ENFORCE_WEBP: "true"
+      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
+      IMGPROXY_ENABLE_AVIF_DETECTION: "true"
+
+      # Safety
+      IMGPROXY_MAX_SRC_RESOLUTION: "50"
+      IMGPROXY_MAX_SRC_FILE_SIZE: "104857600"
+      IMGPROXY_ALLOWED_SOURCES: "local:// http:// https://"
+
+      IMGPROXY_HEALTH_CHECK_PATH: /health
+    volumes:
+      - ../../apps/api/storage/app/public:/data:ro
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  meili_data:

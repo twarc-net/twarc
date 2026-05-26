@@ -1,0 +1,70 @@
+name: Feature request
+description: Propose a new feature or improvement.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature. For larger ideas —
+        especially schema changes or big UI redesigns — please open a
+        [Discussion](https://github.com/twarc-net/twarc/discussions) first so we
+        can shape it together before code.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user pain or missing capability. "Nice to have" is fine — just be honest.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Rough sketch of what you have in mind. UI mocks, API signature, etc. welcome but not required.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about and why they're worse.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - web (Next.js / UI)
+        - api (Laravel / endpoints)
+        - upload pipeline / images
+        - search / discovery
+        - auth / accounts
+        - moderation / admin
+        - notifications
+        - blog
+        - achievements
+        - i18n / a11y
+        - docs / repo
+        - other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: policy
+    attributes:
+      label: Content policy check
+      description: twarc is SFW, halal-friendly, no AI-generated images. We close PRs/issues that ask us to loosen these.
+      options:
+        - label: This request does not loosen the SFW / no-AI / halal-only content policy.
+          required: true
+
+  - type: textarea
+    id: willing
+    attributes:
+      label: Would you like to work on this?
+      placeholder: "Optional — happy to help reviewers know."

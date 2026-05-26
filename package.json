@@ -1,0 +1,28 @@
+{
+  "name": "twarc",
+  "private": true,
+  "version": "0.1.0",
+  "description": "twarc — The World of Anime, Rated & Curated. SFW, halal-friendly anime catalog + fan-art community.",
+  "homepage": "https://twarc.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/twarc-net/twarc.git"
+  },
+  "license": "AGPL-3.0-only",
+  "bugs": "https://github.com/twarc-net/twarc/issues",
+  "packageManager": "pnpm@11.3.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  }
+}

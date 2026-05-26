@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Twarc Blue — design tokens
+   Deep navy base, vibrant ocean blue accents, cyan complement.
+   (Token names ending in `-sakura*` are retained for backward
+    compatibility — they now resolve to BLUE values.)
+   ============================================================ */
+
+@theme {
+  /* Surfaces (deep navy — "anime night sky") */
+  --color-bg-base: #0A0F1A;
+  --color-bg-surface: #131A2A;
+  --color-bg-elevated: #1B2438;
+  --color-border-subtle: #232C40;
+  --color-border-strong: #344160;
+
+  /* Text */
+  --color-text-primary: #ECF2FB;
+  --color-text-secondary: #B5C5D9;
+  --color-text-muted: #6D7E96;
+
+  /* Accents — primary BLUE replaces the old pink "sakura" tokens. */
+  --color-sakura: #4D8BF5;
+  --color-sakura-soft: #7BA9F7;
+  --color-sakura-deep: #2D63C7;
+  --color-cyber: #58E0E8;
+  --color-cyber-deep: #2BB5BE;
+  --color-peach: #FFB38A;
+  --color-matcha: #7BD89F;
+
+  /* Fonts */
+  --font-display: "Zen Kaku Gothic New", "Noto Sans JP", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-jp: "Noto Sans JP", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Neobrutalist shadow tokens (no blur — that's the point) */
+  --shadow-brut-sm: 4px 4px 0 0 var(--color-sakura);
+  --shadow-brut: 6px 6px 0 0 var(--color-sakura);
+  --shadow-brut-lg: 10px 10px 0 0 var(--color-sakura);
+  --shadow-brut-cyber: 6px 6px 0 0 var(--color-cyber);
+}
+
+html, body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle film-grain noise on body for "real / not AI-slop" texture */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Selection */
+::selection {
+  background: var(--color-sakura);
+  color: var(--color-bg-base);
+}
+
+/* Scrollbar (webkit) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg-surface); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-sakura-deep); }
+
+/* Neobrutalist CTA — chunky border, hard shadow, no rounded corners */
+.btn-brut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1.75rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  font-size: 0.95rem;
+  text-transform: lowercase;
+  background: var(--color-sakura);
+  color: var(--color-bg-base);
+  border: 3px solid var(--color-text-primary);
+  box-shadow: var(--shadow-brut);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  cursor: pointer;
+}
+.btn-brut:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0 0 var(--color-text-primary);
+}
+.btn-brut:active {
+  transform: translate(6px, 6px);
+  box-shadow: 0 0 0 0 var(--color-text-primary);
+}
+
+.btn-brut-cyber {
+  background: var(--color-cyber);
+  box-shadow: var(--shadow-brut-cyber);
+}
+.btn-brut-cyber:hover {
+  box-shadow: 3px 3px 0 0 var(--color-text-primary);
+}
+
+/* Ghost button — for secondary actions */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.btn-ghost:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-sakura);
+}
+
+/* Tag chip — JetBrains Mono "real catalog" feel */
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 2px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.tag-chip:hover {
+  color: var(--color-sakura);
+  border-color: var(--color-sakura);
+}
+.tag-chip[data-cat="character"] { color: var(--color-sakura-soft); }
+.tag-chip[data-cat="artist"]    { color: var(--color-peach); }
+.tag-chip[data-cat="copyright"] { color: var(--color-cyber); }
+.tag-chip[data-cat="meta"]      { color: var(--color-matcha); }
+
+/* ============================================================
+   Animations — smooth fade-in, skeleton shimmer, stagger
+   ============================================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes imgFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeInUp 220ms ease-out backwards;
+}
+
+/* Stagger: child index drives delay (handled by inline style in component) */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-surface) 0%,
+    var(--color-bg-elevated) 50%,
+    var(--color-bg-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.img-fade {
+  animation: imgFadeIn 320ms ease-out;
+}
+
+/* Smooth scroll for in-page nav */
+html { scroll-behavior: smooth; }
+
+/* Hide scrollbar on horizontal tab strips */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* ===========================================================
+   TipTap blog editor + reader — minimal styling that matches
+   the twarc dark blue palette. Used by .tt-prose on both
+   the editor surface and the published blog page.
+   =========================================================== */
+.tt-prose {
+  color: var(--color-text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.tt-prose h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.9rem;
+  margin: 1.6rem 0 0.75rem;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+.tt-prose h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.55rem;
+  margin: 1.4rem 0 0.6rem;
+  color: var(--color-text-primary);
+}
+.tt-prose h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin: 1.2rem 0 0.5rem;
+  color: var(--color-text-primary);
+}
+.tt-prose p { margin: 0.75rem 0; }
+.tt-prose strong { color: var(--color-text-primary); font-weight: 800; }
+.tt-prose em     { font-style: italic; }
+.tt-prose s, .tt-prose del { opacity: 0.65; }
+.tt-prose ul, .tt-prose ol {
+  margin: 0.75rem 0 0.75rem 1.5rem;
+  padding-left: 0.5rem;
+}
+.tt-prose ul { list-style: disc; }
+.tt-prose ol { list-style: decimal; }
+.tt-prose ul li::marker, .tt-prose ol li::marker { color: var(--color-sakura); }
+.tt-prose li { margin: 0.25rem 0; }
+.tt-prose a, .tt-prose .tt-link {
+  color: var(--color-sakura);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.tt-prose a:hover { color: var(--color-sakura-soft); }
+.tt-prose blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 4px solid var(--color-sakura);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.tt-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--color-bg-elevated);
+  color: var(--color-cyber);
+  padding: 0.08rem 0.35rem;
+  border: 1px solid var(--color-border-subtle);
+}
+.tt-prose pre, .tt-prose .tt-code-block {
+  font-family: var(--font-mono);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.tt-prose pre code { background: transparent; padding: 0; border: 0; color: var(--color-text-primary); }
+.tt-prose .tt-image, .tt-prose img {
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+  border: 2px solid var(--color-border-strong);
+}
+.tt-prose .tt-highlight, .tt-prose mark {
+  background: var(--color-sakura);
+  color: var(--color-bg-base);
+  padding: 0 0.15rem;
+}
+.tt-prose hr {
+  border: 0;
+  border-top: 2px solid var(--color-border-strong);
+  margin: 2rem 0;
+}
+.tt-prose .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  float: left;
+  pointer-events: none;
+  height: 0;
+}
+
+/* ===========================================================
+   (legacy block kept for any stray usage)
+   =========================================================== */
+.md-editor-wrap [data-color-mode='dark'],
+.md-editor-wrap .w-md-editor {
+  --color-canvas-default: var(--color-bg-surface);
+  --color-canvas-subtle:  var(--color-bg-elevated);
+  --color-border-default: var(--color-border-strong);
+  --color-border-muted:   var(--color-border-subtle);
+  --color-fg-default:     var(--color-text-primary);
+  --color-fg-muted:       var(--color-text-secondary);
+  --color-accent-fg:      var(--color-sakura);
+  --color-accent-emphasis: var(--color-sakura);
+  background: var(--color-bg-surface);
+}
+.md-editor-wrap .w-md-editor-toolbar {
+  background: var(--color-bg-elevated);
+  border-bottom: 2px solid var(--color-border-strong);
+}
+.md-editor-wrap .w-md-editor-toolbar li > button {
+  color: var(--color-text-secondary);
+}
+.md-editor-wrap .w-md-editor-toolbar li > button:hover {
+  color: var(--color-sakura);
+}
+.md-editor-wrap .w-md-editor-preview,
+.md-editor-wrap .wmde-markdown {
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+}
+.md-editor-wrap .wmde-markdown h1,
+.md-editor-wrap .wmde-markdown h2,
+.md-editor-wrap .wmde-markdown h3 {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-strong);
+}
+.md-editor-wrap .wmde-markdown a {
+  color: var(--color-sakura);
+}
+.md-editor-wrap .wmde-markdown code {
+  background: var(--color-bg-elevated);
+  color: var(--color-cyber);
+}
+.md-editor-wrap .wmde-markdown pre {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Modal/dialog backdrop */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 26, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  animation: imgFadeIn 160ms ease-out;
+}
+
+.dialog-panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  animation: fadeInUp 200ms ease-out;
+}

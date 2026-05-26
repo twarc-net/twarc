@@ -1,0 +1,84 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! The more concrete you can be
+        about reproduction, the faster we can fix it. If this is a security
+        issue, **please do not file it here** — see [SECURITY.md](../../SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear, concise description of the bug.
+      placeholder: When I click X, the page Y shows Z instead of the expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps so anyone can follow along.
+      placeholder: |
+        1. Go to '...'
+        2. Click '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where did you see this?
+      placeholder: "e.g. twarc.net production, local dev (commit sha), my fork at ..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - web (Next.js / UI)
+        - api (Laravel / endpoints)
+        - upload pipeline / images
+        - search / discovery
+        - auth / accounts
+        - moderation / admin
+        - notifications
+        - blog
+        - docs / repo
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Browser, OS, Node/PHP versions (for local-dev bugs). Skip if reporting against production.
+      placeholder: |
+        - Browser: Firefox 142 on macOS 15
+        - PHP: 8.5.2 — only if local
+        - Node: 22.22 — only if local
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots / network responses
+      description: Drop relevant errors here. Use code fences for logs.
+      render: shell

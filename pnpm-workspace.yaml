@@ -1,0 +1,8 @@
+packages:
+  - "apps/web"
+  - "apps/admin"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver

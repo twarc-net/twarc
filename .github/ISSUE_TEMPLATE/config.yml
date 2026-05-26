@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/twarc-net/twarc/discussions
+    about: Use Discussions for open-ended questions, roadmap ideas, and feature debates before opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/twarc-net/twarc/security/advisories/new
+    about: Report security issues privately. Do not open a public issue.
+  - name: Content / moderation report (on twarc.net)
+    url: https://twarc.net/report
+    about: Report user-uploaded content (NSFW, AI-generated, harassment) on the live site, not here.
