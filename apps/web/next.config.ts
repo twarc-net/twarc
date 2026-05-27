@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Produce a minimal standalone build at `.next/standalone/` so the
+  // Docker image only needs to ship the files Next actually executes
+  // at runtime (no full node_modules tree). See docker/Dockerfile.web.
+  output: "standalone",
+
   images: {
     // Hosts that next/image is allowed to optimize from. Adding MAL's CDN here
     // so the catalog covers (until they're all rehosted) get the same

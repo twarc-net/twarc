@@ -110,6 +110,22 @@ pnpm dev
 
 A fuller walkthrough with troubleshooting is in [`docs/runbooks/local-dev.md`](docs/runbooks/local-dev.md).
 
+## Self-host with Docker (5 minutes)
+
+If you just want to run twarc on your own server — point a domain at a VPS,
+clone the repo, fill in a `.env`, and:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+That brings up the whole stack (FrankenPHP + Laravel, Next.js, Postgres,
+Redis, Meilisearch, imgproxy, Horizon, scheduler) with **automatic HTTPS**
+via Let's Encrypt — no nginx config, no certbot, no extra reverse proxy.
+
+Step-by-step in [`docs/runbooks/docker-deploy.md`](docs/runbooks/docker-deploy.md),
+including backups, updates, and common gotchas.
+
 ## Contributing
 
 PRs, bug reports, and ideas are all welcome. Start with [**CONTRIBUTING.md**](CONTRIBUTING.md)
