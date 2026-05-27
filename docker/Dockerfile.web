@@ -6,18 +6,23 @@
 
 # -------- 1. Dependency install --------
 FROM node:26-alpine AS deps
-RUN corepack enable pnpm
+RUN npm install -g pnpm@11
 WORKDIR /repo
 
 # Copy lockfiles first for cache hits.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/
 
-RUN pnpm install --frozen-lockfile --filter web...
+# --config.dangerouslyAllowAllBuilds=true: pnpm 10+ refuses to run
+# postinstall scripts by default; sharp + unrs-resolver need theirs to
+# fetch their native binaries. Equivalent to running `pnpm approve-builds`
+# interactively. Safe in our image because we control the lockfile.
+RUN pnpm install --frozen-lockfile --filter web... \
+    --config.dangerouslyAllowAllBuilds=true
 
 # -------- 2. Build --------
 FROM node:26-alpine AS builder
-RUN corepack enable pnpm
+RUN npm install -g pnpm@11
 WORKDIR /repo
 
 COPY --from=deps /repo ./
