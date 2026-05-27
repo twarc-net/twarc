@@ -1,0 +1,66 @@
+# FrankenPHP Caddyfile — single entry point for the whole stack.
+#
+# {$SERVER_NAME} drives Caddy's automatic HTTPS via Let's Encrypt.
+# Set it to `:80` to disable TLS (e.g., when running behind another proxy
+# like Cloudflare's Flexible mode or a load balancer that terminates TLS).
+# Set it to your domain (e.g. `twarc.example.com`) for production TLS.
+
+{
+    # FrankenPHP needs this to know it's the global app server.
+    frankenphp
+    order php_server before file_server
+
+    # Container-friendly: write the persistent stuff to mounted volumes.
+    storage file_system {
+        root /data/caddy
+    }
+}
+
+{$SERVER_NAME:localhost} {
+    encode zstd gzip
+
+    log {
+        output stdout
+        format console
+    }
+
+    # ----- Uploaded media — served straight off disk, skip PHP.
+    handle_path /storage/* {
+        root * /app/storage/app/public
+        file_server
+        header Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    # ----- Laravel routes — anything the API owns.
+    @laravel path /api/* /auth/* /sanctum/* /up /two-factor/* /email/* /verify-email/*
+    handle @laravel {
+        root * /app/public
+        php_server {
+            try_files {path} /index.php?{query}
+        }
+    }
+
+    # ----- Health probe Caddy can answer without hitting PHP.
+    handle /healthz {
+        respond "ok" 200
+    }
+
+    # ----- Everything else — Next.js.
+    # X-Forwarded-* / X-Real-IP are passed by default; no need to set them.
+    handle {
+        reverse_proxy web:3000 {
+            transport http {
+                read_timeout 60s
+            }
+        }
+    }
+
+    # ----- Security headers.
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+}
