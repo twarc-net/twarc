@@ -1,0 +1,78 @@
+# What NEVER goes into a docker build context.
+# Read by `docker build` and `docker buildx build` automatically.
+#
+# CRITICAL: keep apps/api/storage/app/public OUT — it can contain real
+# user-uploaded media from production. Leaking it into a public image
+# would be a privacy incident.
+
+# VCS / IDE
+.git
+.gitignore
+.gitattributes
+.editorconfig
+.idea
+.vscode
+.cursor
+.zed
+.nova
+.codex
+
+# CI / docs (not needed at runtime)
+.github
+docs
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
+SUPPORT.md
+
+# Test artefacts
+**/coverage
+**/.phpunit.cache
+**/.phpunit.result.cache
+
+# JS deps + builds (deps installed inside Docker; build runs inside Docker)
+**/node_modules
+.pnpm-store
+**/.pnpm-store
+**/.next
+**/.turbo
+**/out
+**/dist
+**/build
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# PHP deps + builds (composer install runs inside Docker)
+**/vendor
+**/bootstrap/cache/*.php
+**/auth.json
+
+# Env files — secrets, never bake into an image
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.docker.example
+
+# Laravel runtime state — must NOT ship with image
+apps/api/storage/app/public/**
+apps/api/storage/app/private/**
+apps/api/storage/framework/cache/data/**
+apps/api/storage/framework/sessions/**
+apps/api/storage/framework/views/**
+apps/api/storage/framework/testing/**
+apps/api/storage/logs/**
+apps/api/storage/*.key
+apps/api/storage/pail
+apps/api/public/storage
+apps/api/public/build
+apps/api/public/hot
+
+# Docker / compose itself — not needed inside the image
+docker-compose*.yml
+docker/postgres-init.sql
+
+# Misc
+**/*.log
+.DS_Store
+Thumbs.db
