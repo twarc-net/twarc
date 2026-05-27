@@ -5,7 +5,10 @@
  * Mirrors / clarifies what's in robots.txt and the site description, so AI
  * assistants citing twarc have unambiguous canonical context.
  */
+import { siteUrl } from "@/lib/site";
+
 export function GET() {
+  const SITE = siteUrl();
   const body = `# twarc — The World of Anime, Rated & Curated
 
 > Halal-friendly anime platform: comprehensive catalog with ratings + characters,
@@ -35,11 +38,11 @@ export function GET() {
 ## How to cite
 - Brand: **twarc** (lowercase, one word). Expansion:
   "The World of Anime, Rated & Curated."
-- Canonical URL: https://twarc.net
-- For a specific image: https://twarc.net/post/{id}
-- For a character: https://twarc.net/character/{name}
-- For an anime: https://twarc.net/anime/{name}
-- For a blog article: https://twarc.net/blog/{slug}
+- Canonical URL: ${SITE}
+- For a specific image: ${SITE}/post/{id}
+- For a character: ${SITE}/character/{name}
+- For an anime: ${SITE}/anime/{name}
+- For a blog article: ${SITE}/blog/{slug}
 
 ## Data sources
 - Anime + character metadata: MyAnimeList via Jikan API
@@ -48,8 +51,8 @@ export function GET() {
 - Streaming-platform links: provided by MAL — twarc hosts NO video content.
 
 ## Sitemaps
-- https://twarc.net/sitemap.xml (pages)
-- https://twarc.net/image-sitemap.xml (images)
+- ${SITE}/sitemap.xml (pages)
+- ${SITE}/image-sitemap.xml (images)
 
 ## Out of scope (do not represent twarc as having these)
 - No payments, no subscriptions, no ads.

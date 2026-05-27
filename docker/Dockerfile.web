@@ -23,11 +23,17 @@ WORKDIR /repo
 COPY --from=deps /repo ./
 COPY apps/web ./apps/web
 
+# Build-time API URL — empty string keeps browser fetches relative ("/api/me"),
+# which the Caddy front-door routes to the API container on the same origin.
+# Override with --build-arg only if you're serving the API on a *different* domain.
 ARG NEXT_PUBLIC_API_URL=
 ARG INTERNAL_API_URL=http://api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     INTERNAL_API_URL=$INTERNAL_API_URL \
     NEXT_TELEMETRY_DISABLED=1
+
+# SITE_URL is intentionally read at *runtime* by lib/site.ts so the same image
+# works on any deployer's domain — no rebuild needed.
 
 RUN pnpm --filter web build
 

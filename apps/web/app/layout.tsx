@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { TopNav } from "@/components/TopNav";
 import { Toaster } from "@/components/Toaster";
+import { siteUrl } from "@/lib/site";
 
 const zenKaku = Zen_Kaku_Gothic_New({
   variable: "--font-zen-kaku",
@@ -28,7 +29,7 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
-const SITE = "https://twarc.net";
+const SITE = siteUrl();
 const LOGO = "https://cdn.twarc.net/twarc.png";
 const FAVICON = "https://cdn.twarc.net/TW.png";
 const DEFAULT_DESC =
