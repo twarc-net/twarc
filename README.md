@@ -1,18 +1,22 @@
 <div align="center">
 
+<a href="https://twarc.net"><img src="https://cdn.twarc.net/twarc.png" alt="twarc — The World of Anime, Rated & Curated" width="100%"></a>
+
 # twarc
 
 **The World of Anime, Rated & Curated.**
 
-A free, halal-friendly anime platform — catalog, ratings, characters,
-hand-drawn fan art, watchlists, blogs, and threaded discussion. All SFW.
-All human-curated. No AI slop.
+A free, halal-friendly anime platform — catalog with ratings + characters,
+hand-drawn fan-art gallery, watchlists, blogs, and threaded discussion.
+All SFW. All human-curated. No AI slop.
 
-[**Live → twarc.net**](https://twarc.net)
+### [Try it now → twarc.net](https://twarc.net)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![CI](https://github.com/twarc-net/twarc/actions/workflows/ci.yml/badge.svg)](https://github.com/twarc-net/twarc/actions/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Discussions](https://img.shields.io/badge/discuss-on%20github-blueviolet)](https://github.com/twarc-net/twarc/discussions)
+[![Discussions](https://img.shields.io/github/discussions/twarc-net/twarc?logo=github)](https://github.com/twarc-net/twarc/discussions)
+[![Stars](https://img.shields.io/github/stars/twarc-net/twarc?style=flat&logo=github)](https://github.com/twarc-net/twarc/stargazers)
 
 </div>
 

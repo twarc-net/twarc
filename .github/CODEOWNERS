@@ -1,0 +1,14 @@
+# Default owner for everything — required reviewer on every PR.
+*                              @ogyamada
+
+# Anything that affects content policy needs the same eyes.
+/apps/api/app/Services/HalalGuard*.php  @ogyamada
+/apps/api/app/Http/Middleware/EnsureAdmin*.php  @ogyamada
+
+# Schema changes — extra scrutiny.
+/apps/api/database/migrations/  @ogyamada
+
+# Security-sensitive files.
+SECURITY.md                    @ogyamada
+CODE_OF_CONDUCT.md             @ogyamada
+LICENSE                        @ogyamada
