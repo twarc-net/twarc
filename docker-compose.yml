@@ -1,6 +1,17 @@
-# twarc — production single-host docker-compose.
+# twarc — production single-host docker-compose (pulled images).
 #
-# Run:  docker compose -f docker-compose.prod.yml --env-file .env up -d
+# This is the recommended way to self-host twarc.
+# Images are pulled from the GitHub Container Registry — no local build,
+# no Node / Composer / build-essential required on your server.
+#
+# Run:
+#   cp .env.docker.example .env
+#   nano .env                # fill in the required values
+#   docker compose --env-file .env pull
+#   docker compose --env-file .env up -d
+#
+# To build from source instead (forks, local hacking), use
+# `docker-compose.build.yml` — see docs/runbooks/docker-deploy.md.
 #
 # Architecture:
 #
@@ -9,10 +20,12 @@
 #                                                └──→ proxies everything else to web (Next.js)
 #
 #   horizon, scheduler, postgres, redis, meilisearch, imgproxy — all internal.
-#
-# All services restart unless explicitly stopped. State lives in named volumes.
 
 name: twarc
+
+# Image tag to pull. Override per-deploy: `TWARC_VERSION=v0.1.1 docker compose up -d`.
+# `latest` follows the most recent tagged release.
+x-image-tag: &image-tag ${TWARC_VERSION:-latest}
 
 # ---- Shared env for the three Laravel-image services. ----
 x-api-env: &api-env
@@ -65,18 +78,6 @@ x-api-env: &api-env
   MAIL_FROM_NAME: ${MAIL_FROM_NAME:-twarc}
 
   TRUSTED_PROXIES: "*"
-
-x-api-image: &api-image
-  build:
-    context: .
-    dockerfile: docker/Dockerfile.api
-  image: twarc-api:local
-  restart: unless-stopped
-  depends_on:
-    postgres:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
 
 services:
   # ──────────────── Database ────────────────
@@ -140,7 +141,14 @@ services:
 
   # ──────────────── Laravel API + Caddy front-door ────────────────
   api:
-    <<: *api-image
+    image: ghcr.io/twarc-net/twarc-api:${TWARC_VERSION:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       <<: *api-env
       SERVER_NAME: ${SERVER_NAME:?SERVER_NAME is required - see .env.docker.example}
@@ -157,7 +165,9 @@ services:
 
   # ──────────────── Background workers ────────────────
   horizon:
-    <<: *api-image
+    image: ghcr.io/twarc-net/twarc-api:${TWARC_VERSION:-latest}
+    pull_policy: always
+    restart: unless-stopped
     depends_on:
       api:
         condition: service_started
@@ -176,7 +186,9 @@ services:
       retries: 3
 
   scheduler:
-    <<: *api-image
+    image: ghcr.io/twarc-net/twarc-api:${TWARC_VERSION:-latest}
+    pull_policy: always
+    restart: unless-stopped
     depends_on:
       api:
         condition: service_started
@@ -191,19 +203,16 @@ services:
 
   # ──────────────── Next.js front-end ────────────────
   web:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.web
-      args:
-        NEXT_PUBLIC_API_URL: ${SITE_URL}
-        INTERNAL_API_URL: http://api
-    image: twarc-web:local
+    image: ghcr.io/twarc-net/twarc-web:${TWARC_VERSION:-latest}
+    pull_policy: always
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_API_URL: ${SITE_URL}
+      # Runtime — picked up by apps/web/lib/site.ts so canonical URLs,
+      # JSON-LD, sitemap, og:url all reflect *your* deployment.
+      SITE_URL: ${SITE_URL}
       INTERNAL_API_URL: http://api
 
 volumes:
