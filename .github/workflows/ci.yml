@@ -23,9 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm/action-setup picks the version from package.json's `packageManager` field.
+      # Don't pass `version:` here — it'd collide with `packageManager: pnpm@11.3.0`.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - uses: actions/setup-node@v4
         with:
@@ -35,7 +35,9 @@ jobs:
 
       - name: Install workspace deps
         working-directory: .
-        run: pnpm install --frozen-lockfile
+        # dangerouslyAllowAllBuilds: pnpm 10+ refuses postinstall scripts by
+        # default; sharp + unrs-resolver need theirs to fetch native binaries.
+        run: pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
 
       - name: Lint
         run: pnpm lint
@@ -59,9 +61,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up PHP
+        # 8.4 — composer.lock has symfony 8.x + laravel/framework 13.11
+        # resolved, both of which require php >=8.4.
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: mbstring, intl, pdo_pgsql, redis, gd, bcmath, zip, curl, xml
           coverage: none
           tools: composer:v2
