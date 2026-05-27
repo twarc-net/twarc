@@ -7,8 +7,31 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Nothing yet. Open a [Discussion](https://github.com/twarc-net/twarc/discussions)
-if you want to influence what lands next.
+### Added
+
+- **Pre-built multi-arch Docker images** published to
+  [`ghcr.io/twarc-net/twarc-api`](https://github.com/twarc-net/twarc/pkgs/container/twarc-api)
+  and [`ghcr.io/twarc-net/twarc-web`](https://github.com/twarc-net/twarc/pkgs/container/twarc-web)
+  on every tag + main push. SBOM + SLSA provenance attached.
+- New default `docker-compose.yml` that *pulls* those images instead of
+  building from source — self-hosters go from `git clone` to running
+  twarc in ~90 seconds.
+- `TWARC_VERSION` env var to pin a specific tag (`v0.1.1`) instead of
+  tracking `latest`.
+
+### Changed
+
+- Web app reads `SITE_URL` from the environment at request time instead
+  of hardcoding `https://twarc.net`. The same published image now works
+  on any domain — canonical URLs, OG cards, sitemaps, JSON-LD, and
+  llms.txt all reflect the deployer's domain.
+- The previous compose moved to `docker-compose.build.yml` (kept for
+  forks and air-gapped servers that can't pull from GHCR).
+
+### CI
+
+- New `publish-images.yml` workflow: multi-arch (amd64 + arm64), buildx
+  cache reuse, SBOM, signed attestations.
 
 ## [0.1.0] — 2026-05-27
 
