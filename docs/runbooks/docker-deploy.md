@@ -6,49 +6,85 @@ with auto-HTTPS, Horizon, the scheduler, and Next.js.
 
 For local dev (no Docker), see [`local-dev.md`](local-dev.md).
 
+## Two ways to deploy
+
+| | **Pulled images** (default — `docker-compose.yml`) | **Built from source** (`docker-compose.build.yml`) |
+|---|---|---|
+| First boot | **~90 seconds** (just pulls multi-arch images) | ~5 minutes (builds api + web) |
+| Server requirements | Docker only | Docker + memory headroom for the Next.js build (~2 GB RAM during build) |
+| What changes when you `git pull` | Nothing — pin a tag with `TWARC_VERSION=v0.1.1` | Rebuilds the affected images |
+| When to use | Self-hosting any tagged release | Forking, debugging, air-gapped servers |
+
+Both produce the same runtime stack. The rest of this guide uses the default.
+
 ## Prerequisites
 
 | Thing | Why |
 |---|---|
-| **A server with a public IP** | So Let's Encrypt can issue your TLS cert. Any VPS works — Hetzner, DigitalOcean, Vultr, Contabo. 2 vCPU / 4 GB RAM is plenty to start. |
+| **A server with a public IP** | So Let's Encrypt can issue your TLS cert. Any VPS works — Hetzner, DigitalOcean, Vultr, Contabo. 2 vCPU / 2 GB RAM is plenty when pulling images. |
 | **A domain name** | Pointed at the server's IP via an `A` record. |
 | **Ports 80 + 443 open** | Inbound, both TCP and UDP for HTTP/3 on 443. |
-| **Docker Engine + Compose v2** | Install via [Docker's official script](https://docs.docker.com/engine/install/): `curl -fsSL https://get.docker.com \| sh`. |
-| **8 GB free disk** | For images + database + uploads to grow into. |
+| **Docker Engine + Compose v2** | Install via Docker's official script: `curl -fsSL https://get.docker.com \| sh`. |
+| **5 GB free disk** | For images + database + uploads to grow into. |
 
-## Five-minute setup
+## Quick start (pulled images)
 
 ```bash
-# 1. Clone
-git clone https://github.com/twarc-net/twarc.git
+# 1. Clone (we only need the compose + Caddyfile, not the source)
+git clone --depth=1 https://github.com/twarc-net/twarc.git
 cd twarc
 
 # 2. Make sure the A record resolves to this server before continuing.
-#    Caddy will try to issue a TLS cert immediately on startup; if DNS
-#    isn't pointing here yet, the cert request will fail.
+#    Caddy will request a TLS cert immediately on startup; if DNS isn't
+#    pointing here yet, the cert request will fail (it'll retry though).
+dig +short YOUR_DOMAIN   # should print your server's public IP
 
 # 3. Configure
 cp .env.docker.example .env
 nano .env   # fill in SITE_URL, SERVER_NAME, SESSION_DOMAIN, secrets
 
-# 4. Generate the secrets your .env needs
-echo "APP_KEY=base64:$(openssl rand -base64 32)"
-echo "DB_PASSWORD=$(openssl rand -hex 32)"
-echo "MEILI_MASTER_KEY=$(openssl rand -hex 32)"
-echo "IMGPROXY_KEY=$(openssl rand -hex 32)"
-echo "IMGPROXY_SALT=$(openssl rand -hex 32)"
+# 4. Generate the secrets the .env needs
+cat <<EOF >> .env
+APP_KEY=base64:$(openssl rand -base64 32)
+DB_PASSWORD=$(openssl rand -hex 32)
+MEILI_MASTER_KEY=$(openssl rand -hex 32)
+IMGPROXY_KEY=$(openssl rand -hex 32)
+IMGPROXY_SALT=$(openssl rand -hex 32)
+EOF
 
-# 5. Build + start everything
-docker compose -f docker-compose.prod.yml up -d --build
+# 5. Pull + start
+docker compose --env-file .env pull
+docker compose --env-file .env up -d
 
 # 6. Watch it come up (Ctrl-C exits the tail; the stack keeps running)
-docker compose -f docker-compose.prod.yml logs -f
+docker compose logs -f
 ```
 
-First boot is ~3 minutes: image builds, migrations run, Caddy negotiates TLS
-with Let's Encrypt. After that, restarts are ~10 seconds.
+First boot is ~90 seconds (image pulls + migrations + Caddy negotiating TLS
+with Let's Encrypt). After that, restarts are ~10 seconds.
 
 Then visit your `SITE_URL`. You should see the twarc landing page over HTTPS.
+
+### Pin a specific version
+
+`latest` follows the most recent tagged release. To lock to a specific tag,
+add to `.env`:
+
+```
+TWARC_VERSION=v0.1.1
+```
+
+Then `docker compose pull && up -d` again to switch.
+
+## Build from source instead
+
+If you're forking or want to ship local changes, swap the file flag:
+
+```bash
+docker compose -f docker-compose.build.yml --env-file .env up -d --build
+```
+
+Every subsequent command needs the same `-f docker-compose.build.yml`.
 
 ## Create the first admin
 
@@ -56,7 +92,7 @@ The `users` table starts empty. Register an account through the web UI at
 `/register`, then promote it from the host:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec api \
+docker compose exec api \
     php artisan tinker --execute="\App\Models\User::where('username','YOUR_HANDLE')->update(['role'=>'admin']);"
 ```
 
@@ -65,17 +101,17 @@ Log out, log back in, and you'll see `/admin` in the nav.
 ## What's running
 
 ```
-$ docker compose -f docker-compose.prod.yml ps
+$ docker compose ps
 
-NAME                  IMAGE                              STATUS         PORTS
-twarc-api-1           twarc-api:local                    Up (healthy)   0.0.0.0:80->80, 0.0.0.0:443->443
-twarc-horizon-1       twarc-api:local                    Up (healthy)
-twarc-imgproxy-1      darthsim/imgproxy:v3.27            Up
-twarc-meilisearch-1   getmeili/meilisearch:v1.10         Up (healthy)
-twarc-postgres-1      postgres:18-alpine                 Up (healthy)
-twarc-redis-1         redis:7-alpine                     Up (healthy)
-twarc-scheduler-1     twarc-api:local                    Up
-twarc-web-1           twarc-web:local                    Up (healthy)
+NAME                  IMAGE                                         STATUS         PORTS
+twarc-api-1           ghcr.io/twarc-net/twarc-api:latest            Up (healthy)   0.0.0.0:80->80, 0.0.0.0:443->443
+twarc-horizon-1       ghcr.io/twarc-net/twarc-api:latest            Up (healthy)
+twarc-imgproxy-1      darthsim/imgproxy:v3.27                       Up
+twarc-meilisearch-1   getmeili/meilisearch:v1.10                    Up (healthy)
+twarc-postgres-1      postgres:18-alpine                            Up (healthy)
+twarc-redis-1         redis:7-alpine                                Up (healthy)
+twarc-scheduler-1     ghcr.io/twarc-net/twarc-api:latest            Up
+twarc-web-1           ghcr.io/twarc-net/twarc-web:latest            Up (healthy)
 ```
 
 Only `api` is publicly exposed; everything else is on the internal Compose
@@ -83,15 +119,22 @@ network and unreachable from the outside.
 
 ## Updating
 
+### Pulled images
+```bash
+cd twarc
+git pull                              # only if compose / .env changed
+docker compose pull                   # grab the latest published images
+docker compose up -d                  # recreate containers with the new images
+```
+
+Schema updates run automatically on `api` container start.
+
+### Built from source
 ```bash
 cd twarc
 git pull
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.build.yml up -d --build
 ```
-
-The api container re-runs migrations on startup, so schema updates are picked
-up automatically. No downtime for code changes — Compose recreates containers
-one at a time.
 
 ## Backups
 
@@ -119,7 +162,7 @@ mkdir -p "$OUT"
 cd /path/to/twarc
 
 # Postgres dump
-docker compose -f docker-compose.prod.yml exec -T postgres \
+docker compose exec -T postgres \
     pg_dump -U twarc twarc | gzip > "$OUT/db-$STAMP.sql.gz"
 
 # Uploaded files
@@ -137,7 +180,7 @@ Restore:
 ```bash
 # Database
 gunzip < db-2026-05-27_031700.sql.gz | \
-    docker compose -f docker-compose.prod.yml exec -T postgres \
+    docker compose exec -T postgres \
     psql -U twarc twarc
 
 # Uploads
@@ -146,6 +189,24 @@ docker run --rm \
     -v "$(pwd)":/backup \
     alpine sh -c "cd /data && tar xzf /backup/uploads-2026-05-27_031700.tar.gz"
 ```
+
+## Image provenance
+
+Every published image at `ghcr.io/twarc-net/twarc-{api,web}` ships with:
+
+- **SBOM** (software bill of materials) attached to the manifest.
+- **Build provenance** (SLSA-style) signed via GitHub's OIDC.
+
+Verify with:
+
+```bash
+gh attestation verify oci://ghcr.io/twarc-net/twarc-api:latest \
+    --owner twarc-net
+```
+
+(Requires the `gh` CLI.) A clean verify proves the image was built by the
+[`publish-images.yml`](../../.github/workflows/publish-images.yml) workflow
+in this repo — not tampered with downstream.
 
 ## Common issues
 
@@ -160,7 +221,7 @@ You'll see `tls.obtain` errors in the api logs.
   terminate TLS at the upstream proxy instead.
 
 ### `502` from Caddy on a few specific pages
-Next.js may not be ready yet — first build takes a minute. Check
+Next.js may not be ready yet — first start takes ~30 seconds. Check
 `docker compose logs web` for the "Ready" line.
 
 ### "could not translate host name 'postgres'"
@@ -173,7 +234,8 @@ a host directory instead of the named volume, make sure it's writable by
 UID 33 (www-data inside the FrankenPHP image).
 
 ### Out of memory during `docker compose build`
-Next.js build is memory-heavy. On a 2 GB box, add swap:
+Only affects the build variant. Next.js build is memory-heavy. On a 2 GB
+box, add swap:
 
 ```bash
 fallocate -l 2G /swapfile && chmod 600 /swapfile && \
@@ -199,8 +261,8 @@ Past that, the bottleneck is usually image processing → move to B2 + imgproxy.
 
 ```bash
 # Stop containers, keep volumes (you can up -d to resume)
-docker compose -f docker-compose.prod.yml down
+docker compose down
 
 # Nuke everything including data — destructive
-docker compose -f docker-compose.prod.yml down -v
+docker compose down -v
 ```

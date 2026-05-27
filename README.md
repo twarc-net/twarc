@@ -110,21 +110,24 @@ pnpm dev
 
 A fuller walkthrough with troubleshooting is in [`docs/runbooks/local-dev.md`](docs/runbooks/local-dev.md).
 
-## Self-host with Docker (5 minutes)
+## Self-host with Docker (90 seconds)
 
-If you just want to run twarc on your own server — point a domain at a VPS,
-clone the repo, fill in a `.env`, and:
+Point a domain at a VPS, clone the repo, fill in a `.env`, and:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env pull
+docker compose --env-file .env up -d
 ```
 
-That brings up the whole stack (FrankenPHP + Laravel, Next.js, Postgres,
-Redis, Meilisearch, imgproxy, Horizon, scheduler) with **automatic HTTPS**
-via Let's Encrypt — no nginx config, no certbot, no extra reverse proxy.
+That pulls pre-built multi-arch images from
+[`ghcr.io/twarc-net/twarc-{api,web}`](https://github.com/orgs/twarc-net/packages?repo_name=twarc)
+and brings up the whole stack — FrankenPHP + Laravel, Next.js, Postgres,
+Redis, Meilisearch, imgproxy, Horizon, scheduler — with **automatic HTTPS**
+via Let's Encrypt. No build step. No nginx config. No certbot.
 
-Step-by-step in [`docs/runbooks/docker-deploy.md`](docs/runbooks/docker-deploy.md),
-including backups, updates, and common gotchas.
+Step-by-step (incl. backups, updates, build-from-source variant, image
+provenance verification) in
+[`docs/runbooks/docker-deploy.md`](docs/runbooks/docker-deploy.md).
 
 ## Contributing
 
