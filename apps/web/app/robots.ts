@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site";
 
-const BASE = "https://twarc.net";
+const BASE = siteUrl();
 
 /**
  * Permissive crawl policy: every public page + asset is indexable.

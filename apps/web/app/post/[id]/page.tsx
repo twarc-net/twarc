@@ -93,8 +93,8 @@ export default async function PostDetailPage({ params }: RouteParams) {
     } : undefined,
     creditText: "twarc.net",
     copyrightNotice: "All artwork © respective artists. twarc is a gallery, not the rights holder.",
-    license: "https://twarc.net/licensing",
-    acquireLicensePage: "https://twarc.net/licensing",
+    license: `${SITE}/licensing`,
+    acquireLicensePage: `${SITE}/licensing`,
     keywords: initialPost.tag_string,
   } : null;
 

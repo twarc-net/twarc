@@ -1,0 +1,221 @@
+# twarc — BUILD variant of the production compose.
+#
+# Use this if you want to build the api + web images from source — for forks,
+# local hacking, or air-gapped servers that can't pull from ghcr.io.
+#
+# Most self-hosters should use the default `docker-compose.yml` instead,
+# which pulls pre-built multi-arch images from GitHub Container Registry.
+#
+# Run:  docker compose -f docker-compose.build.yml --env-file .env up -d --build
+#
+# Architecture:
+#
+#   Internet ──→ :80/:443 ──→ api (FrankenPHP) ──┬──→ PHP/Laravel for /api/*, /auth/*, …
+#                                                ├──→ /storage/* served from volume
+#                                                └──→ proxies everything else to web (Next.js)
+#
+#   horizon, scheduler, postgres, redis, meilisearch, imgproxy — all internal.
+
+name: twarc
+
+# ---- Shared env for the three Laravel-image services. ----
+x-api-env: &api-env
+  APP_NAME: twarc
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY:?APP_KEY is required - see .env.docker.example}
+  APP_URL: ${SITE_URL:?SITE_URL is required - see .env.docker.example}
+  CDN_URL: ${CDN_URL:-${SITE_URL}/storage}
+
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: warning
+
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_DATABASE: ${DB_DATABASE:-twarc}
+  DB_USERNAME: ${DB_USERNAME:-twarc}
+  DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+  CACHE_STORE: redis
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: 1440
+  SESSION_SECURE_COOKIE: "true"
+  SESSION_SAME_SITE: lax
+  SESSION_DOMAIN: ${SESSION_DOMAIN}
+  SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS}
+
+  QUEUE_CONNECTION: redis
+  BROADCAST_CONNECTION: log
+
+  MEILISEARCH_HOST: http://meilisearch:7700
+  MEILISEARCH_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
+  SCOUT_DRIVER: ${SCOUT_DRIVER:-null}
+
+  IMGPROXY_URL: http://imgproxy:8080
+  IMGPROXY_KEY: ${IMGPROXY_KEY:?IMGPROXY_KEY is required}
+  IMGPROXY_SALT: ${IMGPROXY_SALT:?IMGPROXY_SALT is required}
+
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-hello@example.com}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:-twarc}
+
+  TRUSTED_PROXIES: "*"
+
+x-api-image: &api-image
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.api
+  image: twarc-api:local
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # ──────────────── Database ────────────────
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-twarc}
+      POSTGRES_USER: ${DB_USERNAME:-twarc}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/00-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-twarc} -d ${DB_DATABASE:-twarc}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ──────────────── Cache / queue / sessions ────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ──────────────── Search ────────────────
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_ENV: production
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────── Image processing ────────────────
+  imgproxy:
+    image: darthsim/imgproxy:v3.27
+    restart: unless-stopped
+    environment:
+      IMGPROXY_KEY: ${IMGPROXY_KEY}
+      IMGPROXY_SALT: ${IMGPROXY_SALT}
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /var/storage
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_TTL: "31536000"
+    volumes:
+      - api_storage:/var/storage:ro
+
+  # ──────────────── Laravel API + Caddy front-door ────────────────
+  api:
+    <<: *api-image
+    environment:
+      <<: *api-env
+      SERVER_NAME: ${SERVER_NAME:?SERVER_NAME is required - see .env.docker.example}
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - api_storage:/app/storage/app/public
+      - api_logs:/app/storage/logs
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # ──────────────── Background workers ────────────────
+  horizon:
+    <<: *api-image
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      <<: *api-env
+      SERVER_NAME: ":80"
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - api_storage:/app/storage/app/public
+      - api_logs:/app/storage/logs
+    command: ["php", "artisan", "horizon"]
+    healthcheck:
+      test: ["CMD", "php", "artisan", "horizon:status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  scheduler:
+    <<: *api-image
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      <<: *api-env
+      SERVER_NAME: ":80"
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - api_storage:/app/storage/app/public
+      - api_logs:/app/storage/logs
+    command: ["php", "artisan", "schedule:work"]
+
+  # ──────────────── Next.js front-end ────────────────
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        INTERNAL_API_URL: http://api
+    image: twarc-web:local
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      # Read at runtime by apps/web/lib/site.ts for canonical URLs,
+      # JSON-LD, sitemap, og:url — so the same image works on any domain.
+      SITE_URL: ${SITE_URL}
+      INTERNAL_API_URL: http://api
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+  api_storage:
+  api_logs:
+  caddy_data:
+  caddy_config:

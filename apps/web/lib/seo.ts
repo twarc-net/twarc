@@ -3,13 +3,18 @@
  * Pages that need fresh data for OG / canonical / title use these.
  */
 
+import { siteUrl, siteHost } from "./site";
+
 const INTERNAL_API = process.env.INTERNAL_API_URL ?? "http://127.0.0.1:8000";
-export const SITE = "https://twarc.net";
+
+/** @deprecated Use siteUrl() from ./site for new code. Kept for compatibility
+ *  with existing import sites that use the constant form. */
+export const SITE = siteUrl();
 
 export async function fetchJsonInternal<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(`${INTERNAL_API}${path}`, {
-      headers: { Accept: "application/json", Host: "twarc.net" },
+      headers: { Accept: "application/json", Host: siteHost() },
       next: { revalidate: 120 },
     });
     if (!res.ok) return null;

@@ -14,8 +14,9 @@
  */
 
 import type { NextRequest } from "next/server";
+import { siteUrl } from "@/lib/site";
 
-const BASE = "https://twarc.net";
+const BASE = siteUrl();
 const INTERNAL_API = process.env.INTERNAL_API_URL ?? "http://127.0.0.1:8000";
 const MAX_ENTRIES = 50_000;
 

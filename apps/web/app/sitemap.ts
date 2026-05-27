@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site";
 
-const BASE = "https://twarc.net";
+const BASE = siteUrl();
 const INTERNAL_API = process.env.INTERNAL_API_URL ?? "http://127.0.0.1:8000";
 
 // Google's per-sitemap cap is 50,000 URLs; we stay below that and can split
