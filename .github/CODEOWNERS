@@ -1,0 +1,14 @@
+# Default owner for everything — required reviewer on every PR.
+*                              @youcefzemmar
+
+# Anything that affects content policy needs the same eyes.
+/apps/api/app/Services/HalalGuard*.php  @youcefzemmar
+/apps/api/app/Http/Middleware/EnsureAdmin*.php  @youcefzemmar
+
+# Schema changes — extra scrutiny.
+/apps/api/database/migrations/  @youcefzemmar
+
+# Security-sensitive files.
+SECURITY.md                    @youcefzemmar
+CODE_OF_CONDUCT.md             @youcefzemmar
+LICENSE                        @youcefzemmar
