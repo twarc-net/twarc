@@ -21,7 +21,7 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # pnpm/action-setup picks the version from package.json's `packageManager` field.
       # Don't pass `version:` here — it'd collide with `packageManager: pnpm@11.3.0`.
@@ -58,7 +58,7 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up PHP
         # 8.4 — composer.lock has symfony 8.x + laravel/framework 13.11
