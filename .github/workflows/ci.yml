@@ -27,7 +27,7 @@ jobs:
       # Don't pass `version:` here — it'd collide with `packageManager: pnpm@11.3.0`.
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
