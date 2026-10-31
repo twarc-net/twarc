@@ -25,7 +25,7 @@ jobs:
 
       # pnpm/action-setup picks the version from package.json's `packageManager` field.
       # Don't pass `version:` here — it'd collide with `packageManager: pnpm@11.3.0`.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v4
         with:
